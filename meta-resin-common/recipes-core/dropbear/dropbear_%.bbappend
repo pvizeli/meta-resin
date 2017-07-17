@@ -18,10 +18,17 @@ python() {
         d.setVar('SRC_URI', srcURI + ' ' + 'file://use_atomic_key_generation_in_all_cases.patch')
 }
 
-FILES_${PN} += "/home"
+FILES_${PN} += " \
+    /home \
+    ${systemd_unitdir} \
+    ${bindir} \
+    "
 
-SYSTEMD_SERVICE_${PN} += "dropbearkey.service"
 SYSTEMD_AUTO_ENABLE = "enable"
+SYSTEMD_SERVICE_${PN} += " \
+    dropbearkey.service \
+    sync-authorized-keys.service \ 
+    "
 
 do_install_append() {
     # Disable password logins
