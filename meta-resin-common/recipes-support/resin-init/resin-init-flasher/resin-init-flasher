@@ -105,7 +105,6 @@ for d in $INTERNAL_DEVICE_KERNEL; do
     fi
 done
 if [ -z "$internal_dev" ]; then
-    resin-device-progress --percentage 100 --state "Failed to find any block devices." || true
     fail "Failed to find any block devices in $INTERNAL_DEVICE_KERNEL."
 fi
 inform "$internal_dev will be used for flashing."
@@ -117,8 +116,6 @@ fi
 
 IMAGE_FILE_SIZE=$(wc -c /opt/"$RESIN_IMAGE" | awk '{print $1}')
 
-resin-device-progress --percentage 0 --state "Starting flashing resin.io on internal media" || true
-
 while kill -USR1 $DD_PID; do
     sleep 3
     if [ ! -s /tmp/dd_progress_log ]; then
@@ -126,7 +123,6 @@ while kill -USR1 $DD_PID; do
     fi
     IMAGE_WRITTEN_BYTES=$(awk 'END{print $1}' /tmp/dd_progress_log)
     let RATIO=$IMAGE_WRITTEN_BYTES*100/$IMAGE_FILE_SIZE || true
-    resin-device-progress --percentage $RATIO --state "Flashing resin.io on internal media" || true
     truncate -s 0 /tmp/dd_progress_log
 done
 
@@ -211,20 +207,7 @@ echo "Board specific flash procedure..."
 STARTTIME=$(date +%s)
 ENDTIME=$(date +%s)
 TIMEOUT=10
-while [ "$(systemctl is-active resin-device-register.service)" != "active" ]
-do
-    if [ $((ENDTIME - STARTTIME)) -le $TIMEOUT ]; then
-        sleep 1
-        ENDTIME=$(date +%s)
-    else
-        inform "Timeout while waiting for register to finish. No network?"
-        break
-    fi
-done
-
 sync
-
-resin-device-progress --percentage 100 --state "Post-Provisioning" || true
 
 inform "Shutting down ..."
 shutdown -h now

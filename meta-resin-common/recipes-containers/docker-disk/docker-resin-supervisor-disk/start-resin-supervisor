@@ -1,34 +1,22 @@
-#!/bin/sh
+#!/bin/sh -e
 
 source /usr/sbin/resin-vars
+source /etc/resin-supervisor/supervisor.conf
 
-SUPERVISOR_IMAGE_ID=$(docker inspect --format='{{.Id}}' $SUPERVISOR_IMAGE:$SUPERVISOR_TAG)
+SUPERVISOR_IMAGE_ID=$(docker inspect --format='{{.Id}}' $SUPERVISOR_IMAGE)
 SUPERVISOR_CONTAINER_IMAGE_ID=$(docker inspect --format='{{.Image}}' resin_supervisor || echo "")
 
 runSupervisor() {
     docker rm --force resin_supervisor || true
-    docker run --privileged --name resin_supervisor \
-        --net=host \
+    docker run --name resin_supervisor \
         -v /var/run/docker.sock:/var/run/docker.sock \
-        -v $CONFIG_PATH:/boot/config.json  \
-        -v /mnt/data/apps.json:/boot/apps.json \
-        -v /resin-data/resin-supervisor:/data \
-        -v /proc/net/fib_trie:/mnt/fib_trie \
+        -v /var/run/hassio-hc.sock:/var/run/hassio-hc.sock \
+        -v /resin-data:/data \
         -v /var/log/supervisor-log:/var/log \
-        -v /:/mnt/root \
-        -e DOCKER_ROOT=/mnt/root/var/lib/docker \
-        -e DOCKER_SOCKET=/var/run/docker.sock \
-        -e BOOT_MOUNTPOINT=$BOOT_MOUNTPOINT \
-        -e API_ENDPOINT=$API_ENDPOINT \
-        -e REGISTRY_ENDPOINT=$REGISTRY_ENDPOINT \
-        -e PUBNUB_SUBSCRIBE_KEY=$PUBNUB_SUBSCRIBE_KEY \
-        -e PUBNUB_PUBLISH_KEY=$PUBNUB_PUBLISH_KEY \
-        -e MIXPANEL_TOKEN=$MIXPANEL_TOKEN \
-        -e DELTA_ENDPOINT=$DELTA_ENDPOINT \
-        -e LED_FILE=${LED_FILE} \
-        -e LISTEN_PORT=$LISTEN_PORT \
-        -e SUPERVISOR_IMAGE=${SUPERVISOR_IMAGE}:${SUPERVISOR_TAG} \
-        ${SUPERVISOR_IMAGE}:${SUPERVISOR_TAG}
+        -e SUPERVISOR_SHARE=/resin-data \
+        -e SUPERVISOR_NAME=resin_supervisor \
+        -e HOMEASSISTANT_REPOSITORY=@HOMEASSISTANT_IMAGE@ \
+        ${SUPERVISOR_IMAGE}
 }
 
 ([ "$SUPERVISOR_IMAGE_ID" == "$SUPERVISOR_CONTAINER_IMAGE_ID" ] && docker start --attach resin_supervisor) || runSupervisor

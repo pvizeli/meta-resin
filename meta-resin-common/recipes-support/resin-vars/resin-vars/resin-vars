@@ -16,7 +16,7 @@ EOF
 }
 
 # Parse arguments
-while [ "$#" -gt "0" ]; do
+while [[ $# > 0 ]]; do
     key=$1
     case $key in
         -h|--help)
@@ -37,6 +37,9 @@ done
 # Resin-boot mountpoint
 BOOT_MOUNTPOINT="/mnt/boot"
 
+# HassIO config file
+SUPERVISOR_CONFIG="/resin-data/config.json"
+
 # Default values
 if [ -z "$CONFIG_PATH" ]; then
     CONFIG_PATH=$BOOT_MOUNTPOINT/config.json
@@ -44,34 +47,14 @@ fi
 
 # If config.json provides redefinitions for our vars let us rewrite their
 # runtime value
-if [ -f $CONFIG_PATH ]; then
-    API_ENDPOINT=$(jq --raw-output ".apiEndpoint // empty" $CONFIG_PATH)
-    LISTEN_PORT=$(jq --raw-output ".listenPort // empty" $CONFIG_PATH)
-    MIXPANEL_TOKEN=$(jq --raw-output ".mixpanelToken // empty" $CONFIG_PATH)
-    PUBNUB_PUBLISH_KEY=$(jq --raw-output ".pubnubPublishKey // empty" $CONFIG_PATH)
-    PUBNUB_SUBSCRIBE_KEY=$(jq --raw-output ".pubnubSubscribeKey // empty" $CONFIG_PATH)
-    REGISTRY_ENDPOINT=$(jq --raw-output ".registryEndpoint // empty" $CONFIG_PATH)
-    VPN_ENDPOINT=$(jq --raw-output ".vpnEndpoint // empty" $CONFIG_PATH)
-    DELTA_ENDPOINT=$(jq --raw-output ".deltaEndpoint // empty" $CONFIG_PATH)
-    CONFIG_HOSTNAME=$(jq --raw-output ".hostname // empty" $CONFIG_PATH)
-    PERSISTENT_LOGGING=$(jq --raw-output ".persistentLogging // empty" $CONFIG_PATH)
-    COUNTRY=$(jq --raw-output ".country // empty" $CONFIG_PATH)
-    UUID=$(jq --raw-output ".uuid // empty" $CONFIG_PATH)
-    PROVISIONING_API_KEY=$(jq --raw-output ".apiKey // empty" $CONFIG_PATH)
-    DEVICE_API_KEY=$(jq --raw-output ".deviceApiKey // empty" $CONFIG_PATH)
-    DEVICE_ID=$(jq --raw-output '.deviceId // empty' $CONFIG_PATH)
-    USER_ID=$(jq --raw-output '.userId // empty' $CONFIG_PATH)
-    APPLICATION_ID=$(jq --raw-output '.applicationId // empty' $CONFIG_PATH)
-    DEVICE_TYPE=$(jq --raw-output '.deviceType // empty' $CONFIG_PATH)
-    REGISTERED_AT=$(jq --raw-output '.registered_at // empty' $CONFIG_PATH)
+if [ -f $CONFIG_PATH ]
+then
+    ENDPOINT=$(jq --raw-output '.endpoint // "https://raw.githubusercontent.com/home-assistant/hassio/master/version.json"' $CONFIG_PATH)
+    CONFIG_HOSTNAME=$(jq --raw-output '.hostname // "hassio"' $CONFIG_PATH)
+    PERSISTENT_LOGGING=$(jq --raw-output '.persistentLogging // false' $CONFIG_PATH)
     NTP_SERVERS=$(jq --raw-output '.ntpServers // empty' $CONFIG_PATH)
     DNS_SERVERS=$(jq --raw-output '.dnsServers // empty' $CONFIG_PATH)
-    if [ -z "$API_ENDPOINT" -o -z "$LISTEN_PORT" -o -z "$MIXPANEL_TOKEN" -o -z "$PUBNUB_PUBLISH_KEY" -o -z "$PUBNUB_SUBSCRIBE_KEY" -o -z "$REGISTRY_ENDPOINT" -o -z "$VPN_ENDPOINT" ]; then
-        echo "[WARNING] $0 : Couldn't read some variables from $CONFIG_PATH"
-    fi
-    if [ -z "$PERSISTENT_LOGGING" ]; then
-        PERSISTENT_LOGGING=false
-    fi
 else
     echo "[WARNING] $0 : '$CONFIG_PATH' not found."
 fi
+

@@ -1,15 +1,15 @@
 require docker-disk.inc
 
 # Resin supervisor supported CPU archtectures
-SUPERVISOR_REPOSITORY_armv5 = "resin/armel-supervisor"
-SUPERVISOR_REPOSITORY_armv6 = "resin/rpi-supervisor"
-SUPERVISOR_REPOSITORY_armv7a = "resin/armv7hf-supervisor"
-SUPERVISOR_REPOSITORY_armv7ve = "resin/armv7hf-supervisor"
-SUPERVISOR_REPOSITORY_aarch64 = "resin/aarch64-supervisor"
-SUPERVISOR_REPOSITORY_x86 = "resin/i386-supervisor"
-SUPERVISOR_REPOSITORY_x86-64 = "resin/amd64-supervisor"
+SUPERVISOR_REPOSITORY_armv5 = "homeassistant/armhf-hassio-supervisor"
+SUPERVISOR_REPOSITORY_armv6 = "homeassistant/armhf-hassio-supervisor"
+SUPERVISOR_REPOSITORY_armv7a = "homeassistant/armhf-hassio-supervisor"
+SUPERVISOR_REPOSITORY_armv7ve = "homeassistant/armhf-hassio-supervisor"
+SUPERVISOR_REPOSITORY_aarch64 = "homeassistant/aarch64-hassio-supervisor"
+SUPERVISOR_REPOSITORY_x86 = "homeassistant/i386-hassio-supervisor"
+SUPERVISOR_REPOSITORY_x86-64 = "homeassistant/amd64-hassio-supervisor"
 
-SUPERVISOR_TAG ?= "v5.1.0"
+SUPERVISOR_TAG ?= "0.45"
 TARGET_REPOSITORY ?= "${SUPERVISOR_REPOSITORY}"
 TARGET_TAG ?= "${SUPERVISOR_TAG}"
 LED_FILE ?= "/dev/null"
@@ -22,14 +22,10 @@ SRC_URI += " \
     file://supervisor.conf \
     file://resin-supervisor.service \
     file://update-resin-supervisor \
-    file://update-resin-supervisor.service \
-    file://update-resin-supervisor.timer \
     "
 
 SYSTEMD_SERVICE_${PN} = " \
     resin-supervisor.service \
-    update-resin-supervisor.service \
-    update-resin-supervisor.timer \
     "
 
 FILES_${PN} += " \
@@ -79,6 +75,9 @@ do_install () {
     install -m 0755 ${WORKDIR}/update-resin-supervisor ${D}${bindir}
     install -m 0755 ${WORKDIR}/start-resin-supervisor ${D}${bindir}
 
+    # Set homeassistant image
+    sed -i -e 's:@HOMEASSISTANT_IMAGE@:${HOMEASSISTANT_IMAGE}:g' ${D}${bindir}/start-resin-supervisor
+
     if ${@bb.utils.contains('DISTRO_FEATURES','systemd','true','false',d)}; then
         install -d ${D}${systemd_unitdir}/system
 
@@ -87,8 +86,6 @@ do_install () {
         install -c -m 0644 ${WORKDIR}/resin-data.mount ${D}${systemd_unitdir}/system/resin\\x2ddata.mount
 
         install -c -m 0644 ${WORKDIR}/resin-supervisor.service ${D}${systemd_unitdir}/system
-        install -c -m 0644 ${WORKDIR}/update-resin-supervisor.service ${D}${systemd_unitdir}/system
-        install -c -m 0644 ${WORKDIR}/update-resin-supervisor.timer ${D}${systemd_unitdir}/system
         sed -i -e 's,@BASE_BINDIR@,${base_bindir},g' \
             -e 's,@SBINDIR@,${sbindir},g' \
             -e 's,@BINDIR@,${bindir},g' \

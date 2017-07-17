@@ -20,8 +20,6 @@ RDEPENDS_${PN} = " \
     coreutils \
     util-linux \
     udev \
-    resin-device-register \
-    resin-device-progress \
     resin-init-board \
     parted \
     resin-init-flasher-board \

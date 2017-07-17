@@ -42,6 +42,7 @@ echo "Docker started."
 if [ -n "${TARGET_REPOSITORY}" ] && [ -n "${TARGET_TAG}" ]; then
     echo "Pulling ${TARGET_REPOSITORY}:${TARGET_TAG}..."
     docker pull $TARGET_REPOSITORY:$TARGET_TAG
+    docker tag $TARGET_REPOSITORY:$TARGET_TAG $TARGET_REPOSITORY:latest
 fi
 
 echo "Stopping docker..."

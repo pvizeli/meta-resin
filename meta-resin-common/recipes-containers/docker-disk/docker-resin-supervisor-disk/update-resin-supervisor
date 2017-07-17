@@ -1,6 +1,8 @@
 #!/bin/bash
 set -o pipefail
 
+USE_LOCAL=no
+
 # Help function
 function update-resin-supervisor-help {
     cat << EOF
@@ -42,6 +44,9 @@ while [[ $# > 0 ]]; do
             UPDATER_SUPERVISOR_TAG=$2
             shift
             ;;
+        -l|--local-update)
+            USE_LOCAL=yes
+            ;;
         *)
             log ERROR "Unrecognized option $1."
             ;;
@@ -51,21 +56,10 @@ done
 
 # Don't souce before parsing args - resin-vars parses args too
 source /usr/sbin/resin-vars
+source /etc/resin-supervisor/supervisor.conf
 
 # A temporary file used until next reboot
 UPDATECONF=/tmp/update-supervisor.conf
-
-if [ -z "$API_ENDPOINT" ]; then
-    echo "Environment variable API_ENDPOINT must be set."
-    exit 1
-fi
-
-# If the user api key exists we use it instead of the deviceApiKey as it means we haven't done the key exchange yet
-_device_api_key=${PROVISIONING_API_KEY:-DEVICE_API_KEY}
-if [ -z "$_device_api_key" -o -z "$DEVICE_ID" ]; then
-    echo "PROVISIONING_API_KEY or DEVICE_API_KEY, and DEVICE_ID variables must be set."
-    exit 1
-fi
 
 function error_handler {
     # If docker pull fails, start the old supervisor again and exit
@@ -76,55 +70,41 @@ function error_handler {
 
 trap 'error_handler $LINENO' ERR
 
-# Detect containers engine
-if which docker &>/dev/null; then
-    DOCKER=docker
-elif which rce &>/dev/null; then
-    DOCKER=rce
-else
-    error_handler $LINENO "no container engine detected"
+# use HassIO API for update
+if [ "$USE_LOCAL" == "no" ] && [ -f $SUPERVISOR_CONFIG ]; then
+    echo "Update supervisor with HassIO API"
+    hassio_api=$($(jq --raw-output ".api_endpoint // empty" $SUPERVISOR_CONFIG))
+
+    if [ ! -z $UPDATER_SUPERVISOR_TAG ]; then
+        payload="{ \"version\": \"$UPDATER_SUPERVISOR_TAG\" }"
+    else
+        payload="{}"
+    fi
+
+    curl -s -X GET -d "$payload" "http://$hassio_api/supervisor/update"
 fi
 
-# Get target supervisor tag from API.
-# The script will exit if curl does not get a valid response.
-# Getting data separately before reading it fixes error handling.
-echo "Getting image name and tag..."
-if data=$(curl --silent --header "User-Agent:" --compressed "$API_ENDPOINT/v1/supervisor_release?\$select=supervisor_version,image_name&\$filter=device/any(d:d/id%20eq%20$DEVICE_ID)&apikey=$_device_api_key" | jq -e -r '.d[0].supervisor_version,.d[0].image_name'); then
-    echo "Supervisor configuration found from API."
+if [ -f $SUPERVISOR_CONFIG ]; then
+    tag=$(jq --raw-output ".hassio_last // empty" $SUPERVISOR_CONFIG)
+    image_name=$SUPERVISOR_IMAGE
+fi
 
-    if [ -n "$UPDATER_SUPERVISOR_TAG" ] || [ -n "$UPDATER_SUPERVISOR_IMAGE" ]; then
-        echo "WARN: Ignore image/tag arguments as API overrides them."
-    fi
-
-    read tag image_name <<<$data
-
-    # Check that we didn't somehow get an empty tag version.
-    if [ -z "$tag" ]; then
-        error_handler $LINENO "no tag received"
-    fi
-else
-    echo "No supervisor configuration found from API. Using arguments for image and tag."
-    source /etc/resin-supervisor/supervisor.conf
-    if [ -z "$UPDATER_SUPERVISOR_TAG" ]; then
-        # Try to get the tag from supervisor.conf
-        if [ -n "$SUPERVISOR_TAG" ]; then
-            UPDATER_SUPERVISOR_TAG=$SUPERVISOR_TAG
-        else
-            echo "ERROR: No tag argument provided."
-            error_handler $LINENO "no tag argument provided"
-        fi
-    fi
-    if [ -z "$UPDATER_SUPERVISOR_IMAGE" ]; then
-        UPDATER_SUPERVISOR_IMAGE=$SUPERVISOR_IMAGE
-    fi
-    echo "Set based on arguments image=$UPDATER_SUPERVISOR_IMAGE and tag=$UPDATER_SUPERVISOR_TAG."
-    image_name=$UPDATER_SUPERVISOR_IMAGE
+# override from params
+if [ ! -z $UPDATER_SUPERVISOR_TAG ]; then
     tag=$UPDATER_SUPERVISOR_TAG
+fi
+if [ ! -z $UPDATER_SUPERVISOR_IMAGE ]; then
+    image_name=$UPDATER_SUPERVISOR_IMAGE
+fi
+
+# Check that we didn't somehow get an empty tag version.
+if [ -z $tag ] || [ -z $image_name ]; then
+    error_handler $LINENO "no tag received"
 fi
 
 # Get image id of tag. This will be non-empty only in case it's already downloaded.
 echo "Getting image id..."
-imageid=$($DOCKER inspect -f '{{.Id}}' "$image_name:$tag") || imageid=""
+imageid=$(docker inspect -f '{{.Id}}' "$image_name:$tag") || imageid=""
 
 if [ -n "$imageid" ]; then
     echo "Supervisor $image_name:$tag already downloaded."
@@ -137,16 +117,23 @@ systemctl stop resin-supervisor
 
 # Pull target version.
 echo "Pulling supervisor $image_name:$tag..."
-$DOCKER pull "$image_name:$tag"
+docker pull "$image_name:$tag"
 
-$DOCKER rm --force resin_supervisor || true
+docker rm --force resin_supervisor || true
 
 # Store the tagged image string so resin-supervisor.service can pick it up
-sed -e "s|SUPERVISOR_IMAGE=.*|SUPERVISOR_IMAGE=$image_name|" -e "s|SUPERVISOR_TAG=.*|SUPERVISOR_TAG=$tag|" /etc/resin-supervisor/supervisor.conf > $UPDATECONF
+echo "SUPERVISOR_IMAGE=$image_name:$tag" > $UPDATECONF
 
 # Run supervisor with the device-type-specific options.
 # We give a specific name to the container to guarantee only one running.
 echo "Start supervisor..."
 systemctl start resin-supervisor
 
-sed -i -e "s|SUPERVISOR_IMAGE=.*|SUPERVISOR_IMAGE=$image_name|" -e "s|SUPERVISOR_TAG=.*|SUPERVISOR_TAG=$tag|" /etc/resin-supervisor/supervisor.conf
+# Mark supervisor as working. This version will run when the device reboots.
+echo "Mark pulled tag as latest..."
+docker tag "$image_name:$tag" "$image_name:latest"
+sed --in-place "s|SUPERVISOR_IMAGE=.*|SUPERVISOR_IMAGE=$image_name|" /etc/resin-supervisor/supervisor.conf
+sed --in-place "s|SUPERVISOR_TAG=.*|SUPERVISOR_TAG=$tag|" /etc/resin-supervisor/supervisor.conf
+
+# cleanup old image
+echo "!!! Please cleanup old supervisor manual !!!"
