@@ -7,6 +7,5 @@ inherit packagegroup
 
 RESIN_INIT_PACKAGE ?= "resin-init-flasher"
 RESIN_MOUNTS ?= "resin-mounts-flasher"
-RESIN_REGISTER ?= "resin-device-register"
 
 include packagegroup-resin.inc
