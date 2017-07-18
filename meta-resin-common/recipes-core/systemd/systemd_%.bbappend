@@ -63,7 +63,7 @@ do_install_append() {
 RDEPENDS_${PN}_append = " resin-ntp-config"
 
 # add pool.ntp.org as default ntp server
-PACKAGECONFIG[ntp] = "--with-ntp-servers='0.resinio.pool.ntp.org 1.resinio.pool.ntp.org 2.resinio.pool.ntp.org 3.resinio.pool.ntp.org',,,"
+PACKAGECONFIG[ntp] = "--with-ntp-servers='0.pool.ntp.org 1.pool.ntp.org 2.pool.ntp.org 3.pool.ntp.org',,,"
 
 PACKAGECONFIG_append = " ntp"
 
