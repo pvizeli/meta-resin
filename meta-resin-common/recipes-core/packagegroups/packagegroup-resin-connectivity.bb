@@ -20,7 +20,6 @@ CONNECTIVITY_PACKAGES = " \
     ${NETWORK_MANAGER_PACKAGES} \
     avahi-daemon \
     crda \
-    dnsmasq \
     usb-modeswitch \
     wireless-tools \
     "
