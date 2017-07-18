@@ -31,7 +31,7 @@ do_install_append() {
         install -m 0644 ${WORKDIR}/NetworkManager.conf.systemd ${D}${sysconfdir}/systemd/system/NetworkManager.service.d/NetworkManager.conf
     fi
 
-    ln -s /var/run/resolvconf/interface/NetworkManager ${D}/etc/resolv.dnsmasq
+    ln -s /var/run/resolvconf/interface/NetworkManager ${D}/etc/resolv.conf
 
     # remove these empty not-used (at this moment) directories so we don't have to package them
     rmdir ${D}${libdir}/NetworkManager/conf.d
