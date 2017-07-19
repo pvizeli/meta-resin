@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -e
-
 # Default values
 LOGFILE=/tmp/`basename "$0"`.log
 LOG=yes
@@ -223,9 +221,9 @@ runPreHacks
 # Avoid supervisor cleaning up resinhup and stop containers
 log "Stopping all containers..."
 systemctl stop resin-supervisor > /dev/null 2>&1
-docker stop $(docker ps -a -q) > /dev/null 2>&1 || true
+docker stop $(docker ps -a -q) > /dev/null 2>&1
 log "Removing all containers..."
-docker rm $(docker ps -a -q) > /dev/null 2>&1 || true
+docker rm $(docker ps -a -q) > /dev/null 2>&1
 
 # Pull resinhup and tag it accordingly
 log "Pulling resinhup..."
@@ -249,8 +247,8 @@ docker run --privileged --rm --net=host $RESINHUP_ENV \
     $DOCKER_REPO/resinhup:$MACHINE-$RESINHUP_VERSION
 RESINHUP_EXIT=$?
 
-docker rmi $DOCKER_REPO/resinhup:$MACHINE-$RESINHUP_VERSION || true
-docker rmi $DOCKER_REPO/resinos-hassio:$HOSTOS_VERSION-$MACHINE || true
+docker rmi $DOCKER_REPO/resinhup:$MACHINE-$RESINHUP_VERSION
+docker rmi $DOCKER_REPO/resinos-hassio:$HOSTOS_VERSION-$MACHINE
 # RESINHUP_EXIT
 #   0 - update done
 #   2 - only intermediate step was done and will continue after reboot
