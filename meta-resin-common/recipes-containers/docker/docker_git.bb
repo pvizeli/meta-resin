@@ -19,7 +19,7 @@ DESCRIPTION = "Linux container runtime \
  "
 
 inherit binary-compress
-FILES_COMPRESS = "/bootstrap/init"
+FILES_COMPRESS = "/boot/init"
 
 SRCREV = "7d1b49da3f9b7f2215c3e9f357c9b104efef2aa2"
 SRCBRANCH = "17.06-resin"
@@ -158,5 +158,5 @@ GROUPADD_PARAM_${PN} = "-r docker"
 FILES_${PN} += " \
   /lib/systemd/system/* \
   /home/root/.docker/ \
-  /bootstrap/init \
+  /boot/init \
   "
