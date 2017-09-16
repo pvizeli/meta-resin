@@ -6,7 +6,7 @@ DESCRIPTION = "Tini is the simplest init you could think of. \
   "
 
 SRCREV = "949e6facb77383876aeff8a6944dde66b3089574"
-SRC_URI = " \ 
+SRC_URI = " \
   git://github.com/krallin/tini.git \
   file://0001-Do-not-strip-the-output-binary-allow-yocto-to-do-thi.patch \
   "
@@ -15,6 +15,9 @@ LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=ffc9091894702bc5dcf4cc0085561ef5"
 
 S = "${WORKDIR}/git"
+
+# tini links with -static, so no PIE for us
+SECURITY_CFLAGS_pn-${PN} = "${SECURITY_NO_PIE_CFLAGS}"
 
 inherit cmake
 
