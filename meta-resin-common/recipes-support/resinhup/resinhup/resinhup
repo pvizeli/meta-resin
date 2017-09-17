@@ -211,13 +211,6 @@ fi
 # Run pre hacks
 runPreHacks
 
-# Avoid supervisor cleaning up resinhup and stop containers
-log "Stopping all containers..."
-systemctl stop resin-supervisor > /dev/null 2>&1
-docker stop $(docker ps -a -q) > /dev/null 2>&1
-log "Removing all containers..."
-docker rm $(docker ps -a -q) > /dev/null 2>&1
-
 # Pull resinhup and tag it accordingly
 log "Pulling resinhup..."
 docker pull $DOCKER_REPO/resinhup:$MACHINE-$RESINHUP_VERSION
