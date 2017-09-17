@@ -8,6 +8,7 @@ source /usr/sbin/resin-vars
 source /etc/resin-supervisor/supervisor.conf
 
 VERSION=@RESINOS_HASSIO_VERSION@
+LOCK_RESINHUP=/tmp/resinhup.lock
 
 #
 # MAIN
@@ -34,6 +35,12 @@ do
         continue
     fi
     if [ "${parse[0]}" == "update" ]; then
+        if [ -f "$LOCK_RESINHUP" ]; then
+            echo "ERROR"
+            continue
+        fi
+        touch "$LOCK_RESINHUP"
+
         if [ ! -z "${parse[1]}" ]; then
             nohup resinhup --hostos-version "${parse[1]}" > /dev/null 2>&1 &
         else
