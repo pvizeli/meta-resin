@@ -136,9 +136,6 @@ do_install() {
   install -m 0644 ${WORKDIR}/docker.service ${D}/${systemd_unitdir}/system
   sed -i "s/@DOCKER_STORAGE@/${DOCKER_STORAGE}/g" ${D}${systemd_unitdir}/system/docker.service
 
-  install -m 0644 ${WORKDIR}/docker-host.service ${D}/${systemd_unitdir}/system
-  sed -i "s/@DOCKER_STORAGE@/${DOCKER_STORAGE}/g" ${D}${systemd_unitdir}/system/docker-host.service
-
   install -m 0644 ${WORKDIR}/var-lib-docker.mount ${D}/${systemd_unitdir}/system
 
   if ${@bb.utils.contains('DISTRO_FEATURES','development-image','true','false',d)}; then
