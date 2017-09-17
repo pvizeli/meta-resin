@@ -26,7 +26,6 @@ SRCBRANCH = "17.06-resin"
 SRC_URI = "\
   git://github.com/resin-os/docker.git;branch=${SRCBRANCH};nobranch=1 \
   file://docker.service \
-  file://docker-host.service \
   file://var-lib-docker.mount \
   file://docker.conf.systemd \
 "
