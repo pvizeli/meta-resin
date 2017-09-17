@@ -114,7 +114,7 @@ do_compile() {
 inherit systemd
 
 SYSTEMD_PACKAGES = "${PN}"
-SYSTEMD_SERVICE_${PN} = "docker.service docker-host.service var-lib-docker.mount"
+SYSTEMD_SERVICE_${PN} = "docker.service var-lib-docker.mount"
 
 do_install() {
   mkdir -p ${D}/${bindir}
