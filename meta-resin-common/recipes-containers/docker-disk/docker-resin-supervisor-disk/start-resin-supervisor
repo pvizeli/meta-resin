@@ -11,8 +11,8 @@ runSupervisor() {
     docker run --name resin_supervisor \
         -v /var/run/docker.sock:/var/run/docker.sock \
         -v /var/run/hassio-hc.sock:/var/run/hassio-hc.sock \
+        -v /var/run/dbus:/var/run/dbus \
         -v /resin-data:/data \
-        -v /var/log/supervisor-log:/var/log \
         -e SUPERVISOR_SHARE=/resin-data \
         -e SUPERVISOR_NAME=resin_supervisor \
         -e HOMEASSISTANT_REPOSITORY=@HOMEASSISTANT_IMAGE@ \
