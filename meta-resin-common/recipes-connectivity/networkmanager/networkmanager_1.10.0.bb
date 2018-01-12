@@ -19,8 +19,8 @@ SRC_URI = " \
     ${GNOME_MIRROR}/NetworkManager/${@gnome_verdir("${PV}")}/NetworkManager-${PV}.tar.xz \
     file://0001-build-fix-race-creating-libnm-core-tests-directory-f.patch \
 "
-SRC_URI[md5sum] = "1acf7a551905ae85d9987aadbb5f7205"
-SRC_URI[sha256sum] = "71a5efcd9e4c237ab57b2893ccc8f91f884ace3bec0e2bd4b31a4c9677ff1bf4"
+SRC_URI[md5sum] = "c4308b83f77a7cb8c6e0e0ec1a30c89f"
+SRC_URI[sha256sum] = "8abbd60cf0e56003a7b9428ceb50a58c80e02e045ac31c3399e9227a712e04de"
 
 S = "${WORKDIR}/NetworkManager-${PV}"
 
@@ -39,7 +39,7 @@ do_compile_prepend() {
         export GIR_EXTRA_LIBS_PATH="${B}/libnm-util/.libs"
 }
 
-PACKAGECONFIG ??= "nss ifupdown netconfig dhclient \
+PACKAGECONFIG ??= "nss ifupdown netconfig dhclient dnsmasq \
     ${@bb.utils.contains('DISTRO_FEATURES','systemd','systemd','consolekit',d)} \
     ${@bb.utils.contains('DISTRO_FEATURES','bluetooth','${BLUEZ}','',d)} \
     ${@bb.utils.contains('DISTRO_FEATURES','wifi','wifi','',d)} \
@@ -56,6 +56,7 @@ PACKAGECONFIG[modemmanager] = "--with-modem-manager-1=yes,--with-modem-manager-1
 PACKAGECONFIG[ppp] = "--enable-ppp,--disable-ppp,ppp,ppp"
 # Use full featured dhcp client instead of internal one
 PACKAGECONFIG[dhclient] = "--with-dhclient=${base_sbindir}/dhclient,,,dhcp-client"
+PACKAGECONFIG[dnsmasq] = "--with-dnsmasq=${bindir}/dnsmasq"
 PACKAGECONFIG[nss] = "--with-crypto=nss,,nss"
 PACKAGECONFIG[gnutls] = "--with-crypto=gnutls,,gnutls libgcrypt"
 PACKAGECONFIG[wifi] = "--enable-wifi=yes,--enable-wifi=no,wireless-tools,wpa-supplicant wireless-tools"
@@ -84,7 +85,9 @@ FILES_${PN} += " \
     ${systemd_unitdir}/system \
 "
 
-RRECOMMENDS_${PN} += "iptables"
+RRECOMMENDS_${PN} += "iptables \
+    ${@bb.utils.contains('PACKAGECONFIG','dnsmasq','dnsmasq','',d)} \
+"
 
 FILES_${PN}-dbg += " \
     ${libdir}/NetworkManager/.debug/ \
