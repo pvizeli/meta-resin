@@ -9,7 +9,7 @@ SUPERVISOR_REPOSITORY_aarch64 = "homeassistant/aarch64-hassio-supervisor"
 SUPERVISOR_REPOSITORY_x86 = "homeassistant/i386-hassio-supervisor"
 SUPERVISOR_REPOSITORY_x86-64 = "homeassistant/amd64-hassio-supervisor"
 
-SUPERVISOR_TAG ?= "0.63"
+SUPERVISOR_TAG ?= "0.95"
 TARGET_REPOSITORY ?= "${SUPERVISOR_REPOSITORY}"
 TARGET_TAG ?= "${SUPERVISOR_TAG}"
 LED_FILE ?= "/dev/null"
