@@ -39,7 +39,7 @@ do_compile_prepend() {
         export GIR_EXTRA_LIBS_PATH="${B}/libnm-util/.libs"
 }
 
-PACKAGECONFIG ??= "nss ifupdown netconfig dhclient dnsmasq \
+PACKAGECONFIG ??= "nss ifupdown netconfig dhclient \
     ${@bb.utils.contains('DISTRO_FEATURES','systemd','systemd','consolekit',d)} \
     ${@bb.utils.contains('DISTRO_FEATURES','bluetooth','${BLUEZ}','',d)} \
     ${@bb.utils.contains('DISTRO_FEATURES','wifi','wifi','',d)} \
@@ -56,7 +56,6 @@ PACKAGECONFIG[modemmanager] = "--with-modem-manager-1=yes,--with-modem-manager-1
 PACKAGECONFIG[ppp] = "--enable-ppp,--disable-ppp,ppp,ppp"
 # Use full featured dhcp client instead of internal one
 PACKAGECONFIG[dhclient] = "--with-dhclient=${base_sbindir}/dhclient,,,dhcp-client"
-PACKAGECONFIG[dnsmasq] = "--with-dnsmasq=${bindir}/dnsmasq"
 PACKAGECONFIG[nss] = "--with-crypto=nss,,nss"
 PACKAGECONFIG[gnutls] = "--with-crypto=gnutls,,gnutls libgcrypt"
 PACKAGECONFIG[wifi] = "--enable-wifi=yes,--enable-wifi=no,wireless-tools,wpa-supplicant wireless-tools"
