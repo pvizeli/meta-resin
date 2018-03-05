@@ -84,9 +84,7 @@ FILES_${PN} += " \
     ${systemd_unitdir}/system \
 "
 
-RRECOMMENDS_${PN} += "iptables \
-    ${@bb.utils.contains('PACKAGECONFIG','dnsmasq','dnsmasq','',d)} \
-"
+RRECOMMENDS_${PN} += "iptables"
 
 FILES_${PN}-dbg += " \
     ${libdir}/NetworkManager/.debug/ \
